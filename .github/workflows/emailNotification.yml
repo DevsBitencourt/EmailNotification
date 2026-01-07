@@ -38,7 +38,6 @@ jobs:
         id: fa
         with:
           app-name: 'consumoflexdemo'
-          slot-name: 'Production'
           package: publicacao.zip
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
           sku: flexconsumption
