@@ -16,29 +16,29 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: 'Verifica as ações do GitHub Action'
+      - name: 'Checkout GitHub Action'
         uses: actions/checkout@v3
 
-      - name: Define a versão do dotnet usada ${{ env.DOTNET_VERSION }} Environment
+      - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Publica o projeto
+      - name: Publish
         run: | 
           dotnet publish EmailNotification.csproj -c Release -o publish
       
-      - name: Realiza a compactação da pasta da publicação
+      - name: Zip publish folder CONTENT
         run: |
           cd publish
-          zip -r ../publicacao.zip .
+          zip -r ../function.zip .
           
-      - name: 'Executa a publicação do Azure Function Action'
+      - name: 'Run Azure Functions Action'
         uses: Azure/functions-action@v1
         id: fa
         with:
-          app-name: 'consumoflexdemo'
-          package: publicacao.zip
+          app-name: 'notification-developer'
+          package: notification-developer.zip
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
           sku: flexconsumption
           scm-do-build-during-deployment: false
