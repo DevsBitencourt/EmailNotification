@@ -40,7 +40,7 @@ jobs:
           app-name: 'consumoflexdemo'
           slot-name: 'Production'
           package: publicacao.zip
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_9DC257A33AF54E2599ECB2F63CE04C52 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
           sku: flexconsumption
           scm-do-build-during-deployment: false
           enable-oryx-build: false
