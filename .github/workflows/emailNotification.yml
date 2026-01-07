@@ -38,7 +38,7 @@ jobs:
         id: fa
         with:
           app-name: 'notification-developer'
-          package: notification-developer.zip
+          package: function.zip
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
           sku: flexconsumption
           scm-do-build-during-deployment: false
