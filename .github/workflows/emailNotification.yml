@@ -1,0 +1,46 @@
+name: Build and deploy dotnet core project to Azure Function App - notification-developer
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
+  DOTNET_VERSION: '8.0' # set this to the dotnet version to use
+  APP_NAME: 'notification-developer'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 'Verifica as ações do GitHub Action'
+        uses: actions/checkout@v3
+
+      - name: Define a versão do dotnet usada ${{ env.DOTNET_VERSION }} Environment
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Publica o projeto
+        run: | 
+          dotnet publish EmailNotification.csproj -c Release -o publish
+      
+      - name: Realiza a compactação da pasta da publicação
+        run: |
+          cd publish
+          zip -r ../publicacao.zip .
+          
+      - name: 'Executa a publicação do Azure Function Action'
+        uses: Azure/functions-action@v1
+        id: fa
+        with:
+          app-name: 'consumoflexdemo'
+          slot-name: 'Production'
+          package: publicacao.zip
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_9DC257A33AF54E2599ECB2F63CE04C52 }}
+          sku: flexconsumption
+          scm-do-build-during-deployment: false
+          enable-oryx-build: false
