@@ -10,12 +10,22 @@ namespace EmailNotification;
 
 public class Notification
 {
+    #region Propriedades
+
     private readonly ILogger<Notification> _logger;
+
+    #endregion
+
+    #region Construtores
 
     public Notification(ILogger<Notification> logger)
     {
         _logger = logger;
     }
+
+    #endregion
+
+    #region Funções
 
     [Function("SendAsync")]
     public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Anonymous, "post")] HttpRequest req)
@@ -24,14 +34,17 @@ public class Notification
 
         try
         {
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            response.Data = JsonConvert.DeserializeObject<EmailDadosDto>(requestBody);
+            try
+            {
+                string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+                response.Data = JsonConvert.DeserializeObject<EmailDadosDto>(requestBody) ?? throw new Exception();
+            }
+            catch (Exception)
+            {
+                throw new Exception("Corpo da requisição inválido");
+            }
 
-            var secret = await CredentialsKeyVault.Obter();
-
-            var _emailSend = new EnviarEmailDto((EmailDadosDto)response.Data, secret);
-
-            var _emailServices = new EmailServices(_emailSend);
+            var _emailServices = new EmailServices((EmailDadosDto)response.Data);
             await _emailServices.SendEmailAsync();
 
             response.Success = true;
@@ -44,4 +57,6 @@ public class Notification
 
         return new OkObjectResult(response);
     }
+
+    #endregion
 }

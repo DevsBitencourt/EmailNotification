@@ -11,13 +11,14 @@ namespace EmailNotification.Implementacoes
         #region propriedades
 
         private readonly MimeMessage message = new();
-        private readonly EnviarEmailDto data;
+        private readonly EmailDadosDto data;
+        private RemetenteDto Remetente;
 
         #endregion
 
         #region Construtores
 
-        public EmailServices(EnviarEmailDto data)
+        public EmailServices(EmailDadosDto data)
         {
             this.data = data;
         }
@@ -28,22 +29,22 @@ namespace EmailNotification.Implementacoes
 
         private EmailServices FromSet()
         {
-            int startIndex = data.Remetente.From.IndexOf('@');
-            string name = data.Remetente.From.Remove(startIndex);
+            int startIndex = Remetente.From.IndexOf('@');
+            string name = Remetente.From[..startIndex];
 
-            message.From.Add(new MailboxAddress(name, data.Remetente.From));
+            message.From.Add(new MailboxAddress(name, Remetente.From));
             return this;
         }
 
         private EmailServices SubjectSet()
         {
-            message.Subject = data.Email.Assunto;
+            message.Subject = data.Assunto;
             return this;
         }
 
         private EmailServices ToSet()
         {
-            foreach (var to in data.Email.Destinatarios)
+            foreach (var to in data.Destinatarios)
             {
                 message.To.Add(new MailboxAddress(to.Name, to.Email));
             }
@@ -57,15 +58,15 @@ namespace EmailNotification.Implementacoes
 
             await AttachmentsSet(builder);
 
-            if (data.Email.Formato.ToParse() == TextFormat.Html)
+            if (data.Formato.ToParse() == TextFormat.Html)
             {
                 var html = await DownloadTemplateHtml.BaixarTemplateHtmlAsync();
-                html = html.Replace("{{CORPO_REQUISICAO}}", data.Email.Corpo);
+                html = html.Replace("{{CORPO_REQUISICAO}}", data.Corpo);
 
                 builder.HtmlBody = html;
             }
             else
-                builder.TextBody = data.Email.Corpo;
+                builder.TextBody = data.Corpo;
 
             message.Body = builder.ToMessageBody();
 
@@ -74,9 +75,9 @@ namespace EmailNotification.Implementacoes
 
         private async Task<EmailServices> AttachmentsSet(BodyBuilder builder)
         {
-            if (data.Email.Attachments.Any())
+            if (data.Attachments.Any())
             {
-                foreach (var item in data.Email.Attachments)
+                foreach (var item in data.Attachments)
                 {
                     await builder.Attachments.AddAsync(item.Name, new MemoryStream(Convert.FromBase64String(item.Data)), new ContentType(item.ContentType, string.Empty));
                 }
@@ -88,8 +89,8 @@ namespace EmailNotification.Implementacoes
         private async Task<EmailServices> SendAsync()
         {
             using var client = new SmtpClient();
-            await client.ConnectAsync(data.Remetente.Host, data.Remetente.Port, false);
-            await client.AuthenticateAsync(data.Remetente.From, data.Remetente.PasswdFrom);
+            await client.ConnectAsync(Remetente.Host, Remetente.Port, false);
+            await client.AuthenticateAsync(Remetente.From, Remetente.PasswdFrom);
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
 
@@ -102,6 +103,8 @@ namespace EmailNotification.Implementacoes
 
         public async Task SendEmailAsync()
         {
+            Remetente = await CredentialsFactory.Get();
+
             await FromSet()
                     .SubjectSet()
                     .ToSet()

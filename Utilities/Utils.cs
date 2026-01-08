@@ -4,6 +4,8 @@ namespace EmailNotification.Utilities
 {
     internal static class Utils
     {
+        #region Metodos estaticos Publicos
+
         public static MimeKit.Text.TextFormat ToParse(this EFormatoBody format)
         {
             return format switch
@@ -17,5 +19,7 @@ namespace EmailNotification.Utilities
                 _ => MimeKit.Text.TextFormat.Plain,
             };
         }
+
+        #endregion
     }
 }
